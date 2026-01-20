@@ -1,0 +1,106 @@
+body {
+    background-color: #212529;
+}
+
+/* Piece Colors - using specific selectors to ensure they apply */
+.piece {
+    font-weight: bold;
+    text-shadow: 1px 1px 1px black;
+    /* Stroke effect for better visibility */
+}
+
+.piece.red {
+    color: #ff3333 !important;
+}
+
+.piece.blue {
+    color: #3333ff !important;
+}
+
+.piece.yellow {
+    color: #ffff00 !important;
+}
+
+.piece.green {
+    color: #00e600 !important;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(14, 40px);
+    grid-template-rows: repeat(14, 40px);
+    gap: 0;
+    background-color: transparent;
+    border: none;
+    transition: transform 0.5s ease;
+    /* Smooth rotation */
+}
+
+/* Board Rotation Classes */
+.board.rotate-0 {
+    transform: rotate(0deg);
+}
+
+.board.rotate-90 {
+    transform: rotate(90deg);
+}
+
+.board.rotate-180 {
+    transform: rotate(180deg);
+}
+
+.board.rotate-270 {
+    transform: rotate(270deg);
+}
+
+/* Counter-rotate pieces so they stay upright */
+.board.rotate-90 .piece {
+    transform: rotate(-90deg);
+}
+
+.board.rotate-180 .piece {
+    transform: rotate(-180deg);
+}
+
+.board.rotate-270 .piece {
+    transform: rotate(-270deg);
+}
+
+
+.cell {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    /* Size for chess pieces */
+    cursor: pointer;
+    user-select: none;
+}
+
+.cell.white {
+    background-color: #eeeed2;
+}
+
+.cell.black {
+    background-color: #769656;
+}
+
+.cell.invalid {
+    background-color: transparent;
+    pointer-events: none;
+}
+
+.piece {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Select/Hover */
+.cell:not(.invalid):hover {
+    border: 2px solid yellow;
+}

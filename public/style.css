@@ -1,5 +1,13 @@
+:root {
+    --cell-size: 40px;
+}
+
 body {
     background-color: #212529;
+    overflow: hidden;
+    /* Prevent scrolling on mobile if board fits */
+    touch-action: manipulation;
+    /* Improve touch response */
 }
 
 /* Piece Colors - using specific selectors to ensure they apply */
@@ -7,6 +15,7 @@ body {
     font-weight: bold;
     text-shadow: 1px 1px 1px black;
     /* Stroke effect for better visibility */
+    font-size: calc(var(--cell-size) * 0.7);
 }
 
 .piece.red {
@@ -27,12 +36,13 @@ body {
 
 .board {
     display: grid;
-    grid-template-columns: repeat(14, 40px);
-    grid-template-rows: repeat(14, 40px);
+    grid-template-columns: repeat(14, var(--cell-size));
+    grid-template-rows: repeat(14, var(--cell-size));
     gap: 0;
     background-color: transparent;
     border: none;
     transition: transform 0.5s ease;
+    margin: auto;
     /* Smooth rotation */
 }
 
@@ -68,12 +78,12 @@ body {
 
 
 .cell {
-    width: 40px;
-    height: 40px;
+    width: var(--cell-size);
+    height: var(--cell-size);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
+    font-size: calc(var(--cell-size) * 0.65);
     /* Size for chess pieces */
     cursor: pointer;
     user-select: none;
@@ -103,4 +113,73 @@ body {
 /* Select/Hover */
 .cell:not(.invalid):hover {
     border: 2px solid yellow;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    :root {
+        --cell-size: 6.5vmin;
+        /* Use viewport units to fit screen */
+    }
+
+    /* Adjust layout for smaller screens */
+    .container-fluid {
+        justify-content: center;
+        padding: 5px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem !important;
+    }
+
+    #game-info {
+        flex-direction: column;
+        gap: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    #status {
+        font-size: 1rem !important;
+    }
+}
+
+/* Player List Styles */
+#player-list {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 200px;
+    font-size: 0.9rem;
+    z-index: 1000;
+}
+
+@media (max-width: 768px) {
+    #player-list {
+        position: static;
+        margin-bottom: 10px;
+        width: 100%;
+        max-width: none;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.player-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
 }

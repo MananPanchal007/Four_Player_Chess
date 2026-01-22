@@ -262,3 +262,66 @@ function renderBoard() {
 }
 
 initGame();
+
+// Player List Logic
+const playerListElement = document.getElementById('player-list');
+
+function renderPlayerList(playersData) {
+    playerListElement.innerHTML = '';
+
+    // Sort logic or fixed order? Let's just iterate colors
+    PLAYERS.forEach(color => {
+        const player = playersData[color];
+        if (player) {
+            const item = document.createElement('div');
+            item.className = 'player-item';
+
+            const dot = document.createElement('span');
+            dot.className = 'player-dot';
+            dot.style.backgroundColor = getHexColor(color);
+
+            const nameSpan = document.createElement('span');
+            nameSpan.innerText = `${player.name} (${color.toUpperCase()})`;
+            nameSpan.style.color = 'white';
+
+            item.appendChild(dot);
+            item.appendChild(nameSpan);
+            playerListElement.appendChild(item);
+        }
+    });
+}
+
+function getHexColor(colorName) {
+    switch (colorName) {
+        case 'red': return '#ff3333';
+        case 'blue': return '#3333ff';
+        case 'yellow': return '#ffff00';
+        case 'green': return '#00e600';
+        default: return 'white';
+    }
+}
+
+socket.on('playerUpdate', (playersData) => {
+    renderPlayerList(playersData);
+});
+
+// Update init to also render list
+const originalInit = socket.listeners('init')[0];
+socket.removeAllListeners('init');
+socket.on('init', (data) => {
+    myColor = data.color;
+    currentTurnIndex = data.turnIndex;
+    updateStatus();
+    rotateBoard(myColor);
+    renderPlayerList(data.players);
+});
+
+// Update spectator to also render list
+const originalSpectator = socket.listeners('spectator')[0];
+socket.removeAllListeners('spectator');
+socket.on('spectator', (data) => {
+    myColor = null;
+    currentTurnIndex = data.turnIndex;
+    updateStatus();
+    renderPlayerList(data.players);
+});

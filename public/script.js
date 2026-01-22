@@ -167,14 +167,20 @@ function handleCellClick(r, c) {
             return;
         }
 
-        socket.emit('move', {
-            from: selectedPiece,
-            to: { r, c },
-            color: myColor
-        });
+        if (validateMove(selectedPiece, { r, c }, boardState)) {
+            socket.emit('move', {
+                from: selectedPiece,
+                to: { r, c },
+                color: myColor
+            });
 
-        selectedPiece = null;
-        renderBoard();
+            selectedPiece = null;
+            renderBoard();
+        } else {
+            alert("Invalid Move!");
+            selectedPiece = null;
+            renderBoard();
+        }
     } else {
         if (clickedPiece && clickedPiece.color === myColor) {
             selectedPiece = { r, c };
@@ -182,6 +188,117 @@ function handleCellClick(r, c) {
         }
     }
 }
+
+// --- Validation Logic ---
+
+function validateMove(from, to, board) {
+    const piece = board[from.r][from.c];
+    if (!piece) return false;
+
+    const rDiff = to.r - from.r;
+    const cDiff = to.c - from.c;
+    const rDist = Math.abs(rDiff);
+    const cDist = Math.abs(cDiff);
+
+    // Target check: cannot capture own piece
+    const target = board[to.r][to.c];
+    if (target && target.color === piece.color) return false;
+
+    // Helper: is path clear? (Exclusive of start and end)
+    const isPathClear = () => {
+        const rStep = rDiff === 0 ? 0 : rDiff / rDist;
+        const cStep = cDiff === 0 ? 0 : cDiff / cDist;
+
+        let currR = from.r + rStep;
+        let currC = from.c + cStep;
+
+        while (currR !== to.r || currC !== to.c) {
+            if (board[currR][currC]) return false; // Obstruction found
+            currR += rStep;
+            currC += cStep;
+        }
+        return true;
+    };
+
+    switch (piece.type) {
+        case 'n': // Knight: L-shape
+            return (rDist === 2 && cDist === 1) || (rDist === 1 && cDist === 2);
+
+        case 'r': // Rook: Straight
+            if (rDiff !== 0 && cDiff !== 0) return false;
+            return isPathClear();
+
+        case 'b': // Bishop: Diagonal
+            if (rDist !== cDist) return false;
+            return isPathClear();
+
+        case 'q': // Queen: Rook + Bishop
+            if ((rDiff === 0 || cDiff === 0) || (rDist === cDist)) {
+                return isPathClear();
+            }
+            return false;
+
+        case 'k': // King: 1 step
+            return rDist <= 1 && cDist <= 1;
+
+        case 'p': // Pawn
+            // Direction depends on color
+            // Red (Bottom) -> Forward is row-1
+            // Yellow (Top) -> Forward is row+1
+            // Blue (Left) -> Forward is col+1
+            // Green (Right) -> Forward is col-1
+
+            let fwdR = 0, fwdC = 0;
+            let startRow = -1, startCol = -1;
+
+            if (piece.color === 'red') { fwdR = -1; startRow = 12; }
+            else if (piece.color === 'yellow') { fwdR = 1; startRow = 1; }
+            else if (piece.color === 'blue') { fwdC = 1; startCol = 1; } // Check start cols! Script says setupPlayer(blue, i+3, 0) and pawns at (i+3, 1)
+            else if (piece.color === 'green') { fwdC = -1; startCol = 12; }
+
+            // General Pawn Logic
+
+            // 1. Regular Move (1 step forward, no capture)
+            if (rDiff === fwdR && cDiff === fwdC && !target) {
+                return true;
+            }
+
+            // 2. Double Move (2 steps forward, no capture, must be at start)
+            if (rDiff === fwdR * 2 && cDiff === fwdC * 2 && !target) {
+                // Check if start position
+                let isAtStart = false;
+                if (piece.color === 'red' || piece.color === 'yellow') isAtStart = from.r === startRow;
+                else isAtStart = from.c === startCol;
+
+                if (isAtStart) {
+                    // Check path clear for the single step in between
+                    const rMid = from.r + fwdR;
+                    const cMid = from.c + fwdC;
+                    if (!board[rMid][cMid]) return true;
+                }
+            }
+
+            // 3. Capture (1 step diagonal)
+            // Diagonals must have rDiff = +/- 1 AND cDiff = +/- 1?
+            // Actually pawn capture is forward-diagonal.
+            // So one component must be Forward, other must be +/- 1.
+
+            // Check Forward component matches fwdR/fwdC
+            const validFwd = (fwdR !== 0 && rDiff === fwdR) || (fwdC !== 0 && cDiff === fwdC);
+            // Check Lateral component is 1
+            const lateralDist = fwdR !== 0 ? Math.abs(cDiff) : Math.abs(rDiff);
+
+            if (validFwd && lateralDist === 1 && target) {
+                return true;
+            }
+
+            return false;
+
+        default:
+            return false;
+    }
+}
+
 
 socket.on('init', (data) => {
     myColor = data.color;
